@@ -15,13 +15,8 @@ def build_random_element(group, dim=None):
         return pm.DualQuaternion.se3_to_unit_dual_quaternion(sp.stats.special_ortho_group.rvs(3),
                                                              np.random.normal(0, 1, (3, 1)))
     elif group == 'clif':
-        elem = np.random.rand(16)
-        # return pm.Cliff4(elem) / pm.Cliff4.magnitude(pm.Cliff4(elem))
         return pm.Cliff4.so4_to_unit(sp.stats.special_ortho_group.rvs(4))
     elif group == 'dc':
-        # elemr = np.random.rand(16)
-        # elemd = np.random.rand(16)
-        # return pm.DualCliff4(elemr, elemd) / pm.DualCliff4.magnitude(pm.DualCliff4(elemr, elemd))
         return pm.DualCliff4.se4_to_unit_dual_clif(sp.stats.special_ortho_group.rvs(4), np.random.normal(0, 1, (4, 1)))
     elif group == 'on':
         return sp.stats.ortho_group.rvs(dim)
@@ -222,183 +217,6 @@ def spectral_method_full_graph(lst, group, dim, tol=1e-6):
     return res
 
 
-# def build_random_so3():
-#     return sp.stats.special_ortho_group.rvs(3)
-#
-#
-# def build_random_s1():
-#     return np.exp(1.0j * np.random.uniform(0, 2 * np.pi))
-#
-#
-# def build_random_so2():
-#     return sp.stats.special_ortho_group.rvs(2)
-#
-#
-# def build_random_on(dim):
-#     return sp.stats.ortho_group.rvs(dim)
-#
-#
-# def create_subset(num, group, dim=None):
-#     if group == 's1':
-#         return [build_random_s1() for i in range(num)]
-#     elif group == 'so2':
-#         return [build_random_so2() for i in range(num)]
-#     elif group == 'on':
-#         return [build_random_on(dim) for i in range(num)]
-#     else:
-#         return [build_random_so3() for i in range(num)]
-#
-#
-# def group_to_ratios(lst, group, dim=None):
-#     n = len(lst)
-#     if group == 's1':
-#         res = np.zeros((n, n), dtype=np.complex_)
-#     elif group == 'so2':
-#         dim = 2
-#         res = np.zeros((n * dim, n * dim))
-#     elif group == 'on':
-#         res = np.zeros((n * dim, n * dim))
-#     else:
-#         dim = 3
-#         res = np.zeros((n * dim, n * dim))
-#     for i in range(n):
-#         for j in range(n):
-#             if group == 's1':
-#                 res[i, j] = lst[i] * np.conjugate(lst[j])
-#             else:
-#                 res[i * dim:(i + 1) * dim, j * dim:(j + 1) * dim] = lst[i] @ lst[j].transpose()
-#     return res
-#
-#
-# def rounding_so3(mat):
-#     U, s, Vh = sp.linalg.svd(mat)
-#     return U @ np.diag([1, 1, sp.linalg.det(U @ Vh)]) @ Vh
-#
-#
-# def rounding_so2(mat):
-#     U, s, Vh = sp.linalg.svd(mat)
-#     return U @ np.diag([1, sp.linalg.det(U @ Vh)]) @ Vh
-#
-#
-# def rounding_s1(com):
-#     return com / np.absolute(com)
-#
-#
-# def rounding_on(mat):
-#     U, s, Vh = sp.linalg.svd(mat)
-#     return U @ Vh
-#
-#
-# def error_so3(elems, approx):
-#     minimizer = np.zeros_like(elems[0])
-#     for i in range(len(elems)):
-#         minimizer += approx[i].transpose() @ elems[i]
-#     minimizer = rounding_so3(minimizer)
-#     err = 0
-#     for i in range(len(elems)):
-#         err += np.linalg.norm(elems[i] - approx[i] @ minimizer)**2
-#     return err
-#
-#
-# def error_so2(elems, approx):
-#     minimizer = np.zeros_like(elems[0])
-#     for i in range(len(elems)):
-#         minimizer += approx[i].transpose() @ elems[i]
-#     minimizer = rounding_so2(minimizer)
-#     err = 0
-#     for i in range(len(elems)):
-#         err += np.linalg.norm(elems[i] - approx[i] @ minimizer)**2
-#     return err
-#
-#
-# def error_s1(elems, approx):
-#     minimizer = 0.0j
-#     for i in range(len(elems)):
-#         minimizer += np.conjugate(approx[i]) * elems[i]
-#     minimizer = rounding_s1(minimizer)
-#     err = 0
-#     for i in range(len(elems)):
-#         err += np.absolute(elems[i] - approx[i] * minimizer) ** 2
-#     return err
-#
-#
-# def error_on(elems, approx):
-#     minimizer = np.zeros_like(elems[0])
-#     for i in range(len(elems)):
-#         minimizer += approx[i].transpose() @ elems[i]
-#     minimizer = rounding_on(minimizer)
-#     err = 0
-#     for i in range(len(elems)):
-#         err += np.linalg.norm(elems[i] - approx[i] @ minimizer)**2
-#     return err
-#
-#
-# def spectral_method_full_graph_so3(lst):
-#     if not isinstance(lst, np.ndarray):
-#         mat = group_to_ratios(lst, 'so3')
-#         num = len(lst)
-#     else:
-#         mat = lst
-#         num = np.shape(lst)[0]//3
-#     eigs = sp.linalg.eigh(mat)[1][:, -1:-4:-1]
-#     res = []
-#     for i in range(num):
-#         res.append(rounding_so3(eigs[3 * i: 3 * (i + 1)]))
-#     return res
-#
-#
-# def spectral_method_full_graph_so3_v2(lst):
-#     mat = group_to_ratios(lst, 'so3')
-#     num = len(lst)
-#     eigs = mat[:, :3]
-#     res = []
-#     for i in range(num):
-#         res.append(rounding_so3(eigs[3 * i: 3 * (i + 1)]))
-#     return res
-#
-#
-# def spectral_method_full_graph_s1(lst):
-#     if not isinstance(lst, np.ndarray):
-#         mat = group_to_ratios(lst, 's1')
-#         num = len(lst)
-#     else:
-#         mat = lst
-#         num = np.shape(lst)[0]
-#     eigs = sp.linalg.eigh(mat)[1][:, -1]
-#     res = []
-#     for i in range(num):
-#         res.append(rounding_s1(eigs[i]))
-#     return res
-#
-#
-# def spectral_method_full_graph_so2(lst):
-#     if not isinstance(lst, np.ndarray):
-#         mat = group_to_ratios(lst, 'so2')
-#         num = len(lst)
-#     else:
-#         mat = lst
-#         num = np.shape(lst)[0]//2
-#     eigs = sp.linalg.eigh(mat)[1][:, -1:-3:-1]
-#     res = []
-#     for i in range(num):
-#         res.append(rounding_so2(eigs[2 * i: 2 * (i + 1)]))
-#     return res
-#
-#
-# def spectral_method_full_graph_on(lst, dim):
-#     if not isinstance(lst, np.ndarray):
-#         mat = group_to_ratios(lst, 'on', dim)
-#         num = len(lst)
-#     else:
-#         mat = lst
-#         num = np.shape(lst)[0]//dim
-#     eigs = sp.linalg.eigh(mat)[1][:, -1:-(dim + 1):-1]
-#     res = []
-#     for i in range(num):
-#         res.append(rounding_on(eigs[dim * i: dim * (i + 1)]))
-#     return res
-
-
 def random_confidence(mat, prob, group, dim):
     if group == 'quat':
         shape = mat.real.shape[0]//dim
@@ -562,60 +380,6 @@ def translation_error(elems, approx, dim=None):
     return err
 
 
-# def noisy_ratios_so3(mat, prob):
-#     res = np.copy(mat)
-#     for i in range(1, mat.shape[0] // 3):
-#         for j in range(i):
-#             if np.random.uniform(0, 1) > prob:
-#                 res[3 * i: 3 * (i + 1), 3 * j: 3 * (j + 1)] = build_random_so3()
-#                 res[3 * j: 3 * (j + 1), 3 * i: 3 * (i + 1)] = res[3 * i: 3 * (i + 1), 3 * j: 3 * (j + 1)].transpose()
-#     return res
-#
-#
-# def noisy_ratios_so3_v2(mat, prob):
-#     res = np.copy(mat)
-#     for i in range(1, mat.shape[0] // 3):
-#         for j in range(i):
-#             if np.random.uniform(0, 1) > prob:
-#                 res[3 * i: 3 * (i + 1), 3 * j: 3 * (j + 1)] = build_random_so3()
-#                 res[3 * j: 3 * (j + 1), 3 * i: 3 * (i + 1)] = build_random_so3()
-#     return res
-#
-#
-# def noisy_ratios_on(mat, prob, dim):
-#     res = np.copy(mat)
-#     for i in range(1, mat.shape[0] // dim):
-#         for j in range(i):
-#             if np.random.uniform(0, 1) > prob:
-#                 res[dim * i: dim * (i + 1), dim * j: dim * (j + 1)] = build_random_on(dim)
-#                 res[dim * j: dim * (j + 1), dim * i: dim * (i + 1)] =\
-#                     res[dim * i: dim * (i + 1), dim * j: dim * (j + 1)].transpose()
-#     return res
-
-# # rotations only #
-# err = np.zeros((50, 20))
-# for sig in range(0, 20):
-#     print(f'sigma = {sig + 1}')
-#     for repetition in range(50):
-#         A = create_random_subset(100, 'so', 4)
-#         B = [pm.Cliff4.so4_to_unit(elem) for elem in A]
-#         Bmat = experiment(B, 'clif', (sig + 1)*np.pi/180)
-#         C = spectral_method_full_graph(Bmat, 'clif', 1)
-#         D = [pm.Cliff4.unit_to_so4(approx) for approx in C]
-#         err[repetition, sig] = group_error(B, C, 'clif', 1)
-#         print(repetition + 1)
-# max_r = np.max(err, axis=0)
-# min_r = np.min(err, axis=0)
-# mean_r = np.mean(err, axis=0)
-# x = range(1, 21)
-# plt.plot(x, mean_r)
-# plt.ylabel('Rotation Error')
-# plt.fill_between(x, min_r, max_r, alpha=0.2)
-# plt.grid()
-# plt.yscale('log')
-# plt.show()
-
-
 rot_err = np.zeros((50, 20))
 trans_err = np.zeros((50, 20))
 for sig in range(0, 20):
@@ -656,48 +420,24 @@ axs[1].set_yscale('log')
 plt.show()
 
 
-def noise_model_group(lst, prob, group, dim):
-    n = len(lst)
-    noisy = np.zeros((dim * n, dim * n))
-    if group == 's1':
-        for i in range(n):
-            for j in range(n):
-                if np.random.uniform(0, 1) < prob:
-                    noisy[i, j] = lst[i] * np.conjugate(lst[j])
-                else:
-                    noisy[i, j] = build_random_element('s1', 1)
-    else:
-        for i in range(n):
-            for j in range(n):
-                if np.random.uniform(0, 1) < prob:
-                    noisy[i * dim:(i + 1) * dim, j * dim:(j + 1) * dim] = lst[i] @ lst[j].transpose()
-                else:
-                    noisy[i * dim:(i + 1) * dim, j * dim:(j + 1) * dim] = build_random_element(group, dim)
-    mat = noisy + prob * subset_to_ratios(lst, group, dim)
-    spec = sp.linalg.eigvals(mat)
-    plt.hist(spec, 50, density=True)
-    plt.show()
-
-# def noise_model_so3(lst, prob):
+# def noise_model_group(lst, prob, group, dim):
 #     n = len(lst)
-#     noisy = np.zeros((n * 3, n * 3))
-#     for i in range(n):
-#         for j in range(n):
-#             if np.random.uniform(0, 1) < prob:
-#                 noisy[i * 3:(i + 1) * 3, j * 3:(j + 1) * 3] = lst[i] @ lst[j].transpose()
-#             else:
-#                 noisy[i * 3:(i + 1) * 3, j * 3:(j + 1) * 3] = build_random_so3()
-#     mat = noisy + prob * group_to_ratios(lst, 'so3')
+#     noisy = np.zeros((dim * n, dim * n))
+#     if group == 's1':
+#         for i in range(n):
+#             for j in range(n):
+#                 if np.random.uniform(0, 1) < prob:
+#                     noisy[i, j] = lst[i] * np.conjugate(lst[j])
+#                 else:
+#                     noisy[i, j] = build_random_element('s1', 1)
+#     else:
+#         for i in range(n):
+#             for j in range(n):
+#                 if np.random.uniform(0, 1) < prob:
+#                     noisy[i * dim:(i + 1) * dim, j * dim:(j + 1) * dim] = lst[i] @ lst[j].transpose()
+#                 else:
+#                     noisy[i * dim:(i + 1) * dim, j * dim:(j + 1) * dim] = build_random_element(group, dim)
+#     mat = noisy + prob * subset_to_ratios(lst, group, dim)
 #     spec = sp.linalg.eigvals(mat)
 #     plt.hist(spec, 50, density=True)
 #     plt.show()
-
-
-# N = 200
-# p = 0.07
-# A = create_random_subset(N, 'so', 2)
-# R = np.sqrt(N * (1 - p**2))
-# xval = np.linspace(-R, R, 1000)
-# yval = 2 / (np.pi * R ** 2) * np.sqrt(R ** 2 - xval ** 2)
-# plt.plot(xval, yval)
-# noise_model_group(A, p, 'so', 2)
